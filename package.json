@@ -1,11 +1,15 @@
 {
   "name": "starter",
   "version": "1.0.0",
-  "description": "",
+  "description": "First big nodejs project",
+  "repository": "https://github.com/Vikaskumar75/Natours.git",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC"
+  "author": "Vikas Kumar",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
