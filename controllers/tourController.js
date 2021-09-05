@@ -1,82 +1,104 @@
-const fs = require('fs');
+const Tour = require('../models/tourModel');
 
-const tours = JSON.parse(
-  fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`)
-);
+exports.createTour = async (req, res) => {
+  try {
+    // This below line of code is equivalent to
+    // const tour = new Tour(req.body);
+    // tour.save();
+    const newTour = await Tour.create(req.body);
 
-exports.checkID = (req, res, next, val) => {
-  if (req.params.id * 1 >= tours.length) {
-    return res.status(404).json({
-      status: 'failed',
-      message: 'Invalid ID',
+    // Now for sending the response back we use res.json and status code used for create method is 201
+    res.status(201).json({
+      status: 'success',
+      data: {
+        tour: newTour,
+      },
     });
-  }
-  next();
-};
-
-exports.checkBody = (req, res, next) => {
-  if (!req.body.name || !req.body.price) {
-    return res.status(400).json({
+  } catch (err) {
+    res.status(400).json({
       status: 'failure',
-      message: 'Missing name or price',
+      message: err.message,
     });
   }
-  next();
 };
 
-exports.createTour = (req, res) => {
-  console.log('I am inside create tour');
-  const newId = tours[tours.length - 1].id + 1;
-  const newTour = Object.assign({ id: newId }, req.body);
+exports.getAllTours = async (req, res) => {
+  try {
+    // We use find() method on Tour model to get all the documents in the collection
+    const allTours = await Tour.find();
 
-  tours.push(newTour);
-
-  fs.writeFile(
-    `${__dirname}/../dev-data/data/tours-simple.json`,
-    JSON.stringify(tours),
-    (err) => {
-      if (err) console.log(err);
-      res.status(201).json({ status: 'success', data: { tour: newTour } });
-    }
-  );
+    res.status(200).json({
+      status: 'success',
+      results: allTours.length,
+      data: {
+        tours: allTours,
+      },
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: 'failure',
+      message: err.message,
+    });
+  }
 };
 
-exports.getAllTours = (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    requestedAt: req.requestTime,
-    results: tours.length,
-    data: {
-      tours: tours,
-    },
-  });
+exports.getTour = async (req, res) => {
+  try {
+    // This below line of code is equivalent to
+    // const tour = await Tour.find({ _id: req.params.id });
+    const tour = await Tour.findById(req.params.id);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        tour,
+      },
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: 'failure',
+      message: err.message,
+    });
+  }
 };
 
-exports.getTour = (req, res) => {
-  const id = req.params.id * 1;
-  const tour = tours.find((el) => el.id === id);
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour: tour,
-    },
-  });
+exports.updateTour = async (req, res) => {
+  try {
+    // The commetned code is one way to update a document but we dont get the updated document back
+    // await Tour.updateOne({ _id: req.params.id }, { $set: req.body });
+    const updatedTour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        updatedTour,
+      },
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: 'failure',
+      message: err.message,
+    });
+  }
 };
 
-exports.updateTour = (req, res) => {
-  const id = req.params.id * 1;
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour: '<Updated tour here>.....',
-    },
-  });
-};
+exports.deleteTour = async (req, res) => {
+  try {
+    // This below line of code is equivalent to
+    // await Tour.deleteOne({ _id: req.params.id });
+    await Tour.findByIdAndDelete(req.params.id);
 
-exports.deleteTour = (req, res) => {
-  const id = req.params.id * 1;
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
+    res.status(204).json({
+      status: 'success',
+      message: 'Successfully deleted',
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: 'failure',
+      message: err.message,
+    });
+  }
 };
